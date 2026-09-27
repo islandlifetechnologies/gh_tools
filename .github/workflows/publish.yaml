@@ -89,13 +89,13 @@ jobs:
           git commit --allow-empty -m "Update linux binary"
           git push
 
-      # - name: Create Tag
-      #   shell: bash
-      #   run: |
-      #     set -e
+      - name: Create Tag
+        shell: bash
+        run: |
+          set -e
 
-      #     dart pub global activate -path .
-      #     pubspec_tag --token "${{ secrets.GITHUB_TOKEN }}"
+          dart pub global activate -path .
+          pubspec_tag --token "${{ secrets.GITHUB_TOKEN }}"
 
       # - name: Publish
       #   shell: bash
