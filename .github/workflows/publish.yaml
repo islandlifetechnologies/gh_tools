@@ -29,12 +29,19 @@ jobs:
           dart analyze
           dart test
 
+      - name: Compile Binary
+        run: |
+          dart compile exe bin/detect_changes.dart -o bin/detect_changes
+          dart compile exe bin/pubspec_tag.dart -o bin/pubspec_tag
+          dart compile exe bin/scan_pubspec.dart -o bin/scan_pubspec
+          dart compile exe bin/update_repo_properties.dart -o bin/update_repo_properties
+          echo "bin" >> $GITHUB_PATH
+
+      - uses: islandlifetechnologies/markup@v1
+
       - name: Update README.md
         shell: bash
         run: |
-          set -e
-
-          dart pub global activate markup
           markup -i README.md
 
       - name: Post Markdown to GitHub
@@ -47,13 +54,6 @@ jobs:
             **/*.svg
           commit-msg: "[actions skip]: Auto-generated Markdown TOCs"
           github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Compile Binary
-        run: |
-          dart compile exe bin/detect_changes.dart -o bin/detect_changes
-          dart compile exe bin/pubspec_tag.dart -o bin/pubspec_tag
-          dart compile exe bin/scan_pubspec.dart -o bin/scan_pubspec
-          dart compile exe bin/update_repo_properties.dart -o bin/update_repo_properties
 
       - name: Prepare Git
         shell: bash
