@@ -1,0 +1,50 @@
+name: Test
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [bin]
+
+jobs:
+  test-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: islandlifetechnologies/gh_tools@v1
+
+      - shell: bash
+        run: |
+          detect_changes --help
+          pubspec_tag --help
+          scan_pubspec --help
+          update_repo_properties --help
+
+  test-macos:
+    runs-on: macos-latest
+
+    steps:
+      - uses: islandlifetechnologies/markup@v1
+
+      - shell: bash
+        run: |
+          detect_changes --help
+          pubspec_tag --help
+          scan_pubspec --help
+          update_repo_properties --help
+
+  test-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: islandlifetechnologies/markup@v1
+
+      - shell: bash
+        run: |
+          detect_changes --help
+          pubspec_tag --help
+          scan_pubspec --help
+          update_repo_properties --help

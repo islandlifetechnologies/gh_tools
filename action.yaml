@@ -1,0 +1,31 @@
+name: "Setup GH Tools"
+description: "Pull down and set up the GH Tools binaries"
+author: "islandlifetech"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+      with:
+        repository: islandlifetechnologies/gh_tools
+        ref: bin
+        path: .gh_tools/bin
+
+    - name: Update path to include GH Tools - Linux
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        echo "$PWD/.gh_tools/bin/linux" >> $GITHUB_PATH
+
+    - name: Update path to include GH Tools - MacOS
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        echo "$PWD/.gh_tools/bin/macos" >> $GITHUB_PATH
+
+    - name: Update path to include GH Tools - Windows
+      if: runner.os == 'Windows'
+      shell: bash
+      run: |
+        echo "$PWD/.gh_tools/bin/windows" >> $GITHUB_PATH
