@@ -3,10 +3,8 @@
 Tools and CLI binaries for common GitHub Actions workflows and repository automation tasks in Dart and Flutter projects.
 
 **Table of Contents**
-
 <!-- markup:toc /-->
 <!-- markup:output -->
-
 - [Installation](#installation)
 - [CLI Tools](#cli-tools)
   - [detect_changes](#detect_changes)
@@ -20,7 +18,7 @@ Tools and CLI binaries for common GitHub Actions workflows and repository automa
   - [Evaluating Change Filters](#evaluating-change-filters)
   - [Emitting Outputs](#emitting-outputs)
   - [Managing Custom Properties](#managing-custom-properties)
-  <!-- /markup:output -->
+<!-- /markup:output -->
 
 ---
 
@@ -39,7 +37,6 @@ dart pub global activate gh_tools
 ### `detect_changes`
 
 Evaluates changed files for a PR or push against defined glob filters.
-
 <!-- markup:process
 
 command: detect_changes
@@ -48,6 +45,18 @@ args:
 output:
   fence-type: bash
 /-->
+<!-- markup:output -->
+```bash
+detect_changes 1.0.0
+
+    --filters (mandatory)    Filter definitions (YAML/JSON).
+    --mode                   Default filter mode. And requires all filters to match, or will match on any filter.
+                             [and, or (default)]
+-h, --help                   Show usage.
+-v, --version                Show version.
+-t, --token                  GitHub access token.
+```
+<!-- /markup:output -->
 
 #### GitHub Actions Example
 
