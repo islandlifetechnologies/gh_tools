@@ -94,7 +94,6 @@ jobs:
         run: |
           set -e
 
-          dart pub global activate -path .
           pubspec_tag --token "${{ secrets.GITHUB_TOKEN }}"
 
       # - name: Publish
