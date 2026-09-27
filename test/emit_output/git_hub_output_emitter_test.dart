@@ -52,6 +52,7 @@ void main() {
         final emitter = GitHubOutputEmitter(fs: fs);
         expect(() => emitter.emit({'A': 'B'}), throwsStateError);
       },
+      skip: Platform.environment['GITHUB_OUTPUT'] != null,
     );
   });
 }
