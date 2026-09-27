@@ -3,10 +3,8 @@
 Tools and CLI binaries for common GitHub Actions workflows and repository automation tasks in Dart and Flutter projects.
 
 **Table of Contents**
-
 <!-- markup:toc /-->
 <!-- markup:output -->
-
 - [Installation](#installation)
 - [Tools / Binaries](#tools-binaries)
   - [detect_changes](#detect_changes)
@@ -15,8 +13,9 @@ Tools and CLI binaries for common GitHub Actions workflows and repository automa
     - [GitHub Actions Example](#github-actions-example-1)
   - [scan_pubspec](#scan_pubspec)
     - [GitHub Actions Example](#github-actions-example-2)
-  - [update_repo_properties](#update_repo_properties) - [Example Properties File .github/properties.yaml](#example-properties-file-githubpropertiesyaml)
-  <!-- /markup:output -->
+  - [update_repo_properties](#update_repo_properties)
+    - [Example Properties File .github/properties.yaml](#example-properties-file-githubpropertiesyaml)
+<!-- /markup:output -->
 
 ---
 
@@ -43,7 +42,6 @@ That will automatically get the latest binaries for either Linux, MacOS, or Wind
 ### `detect_changes`
 
 Evaluates changed files for a PR or push against defined glob filters.
-
 <!-- markup:process
 
 command: detect_changes
@@ -53,15 +51,8 @@ output:
   fence-type: bash
 /-->
 <!-- markup:output -->
-
 ```bash
-Resolving dependencies...
-Downloading packages...
-  petitparser 7.0.2 (7.1.0 available)
-No dependencies would change in `/Users/jpeiffer/git/ilt/gh_tools`.
-1 package has newer versions incompatible with dependency constraints.
-Try `dart pub outdated` for more information.
-/Users/jpeiffer/flutter/bin/cache/dart-sdk/bin/dart 1.0.0
+detect_changes 1.0.0
 
     --filters (mandatory)    Filter definitions (YAML/JSON).
     --mode                   Default filter mode. And requires all filters to match, or will match on any filter.
@@ -70,7 +61,6 @@ Try `dart pub outdated` for more information.
 -v, --version                Show version.
 -t, --token                  GitHub access token.
 ```
-
 <!-- /markup:output -->
 
 #### GitHub Actions Example
@@ -202,7 +192,6 @@ The `CHANGES` option is typically easier to use when looking for a single change
 ### `pubspec_tag`
 
 Extracts the information from the pubspec and utilizes that to create a tag for the repository.
-
 <!-- markup:process
 
 command: pubspec_tag
@@ -212,15 +201,8 @@ output:
   fence-type: bash
 /-->
 <!-- markup:output -->
-
 ```bash
-Resolving dependencies...
-Downloading packages...
-  petitparser 7.0.2 (7.1.0 available)
-No dependencies would change in `/Users/jpeiffer/git/ilt/gh_tools`.
-1 package has newer versions incompatible with dependency constraints.
-Try `dart pub outdated` for more information.
-/Users/jpeiffer/flutter/bin/cache/dart-sdk/bin/dart 1.0.0
+pubspec_tag 1.0.0
 
     --branch        Branch name to scan the project for.  Default to the repository's default branch.
     --changelog     Scan for the version to exist in the changelog and fail if not.
@@ -242,7 +224,6 @@ Try `dart pub outdated` for more information.
 -r, --repository    Repository to utilize.  Defaults to the current repository.
 -t, --token         GitHub access token.
 ```
-
 <!-- /markup:output -->
 
 #### GitHub Actions Example
@@ -262,7 +243,6 @@ Try `dart pub outdated` for more information.
 ### `scan_pubspec`
 
 Extracts pubspec metadata and exports it for downstream workflow steps.
-
 <!-- markup:process
 
 command: scan_pubspec
@@ -272,15 +252,8 @@ output:
   fence-type: bash
 /-->
 <!-- markup:output -->
-
 ```bash
-Resolving dependencies...
-Downloading packages...
-  petitparser 7.0.2 (7.1.0 available)
-No dependencies would change in `/Users/jpeiffer/git/ilt/gh_tools`.
-1 package has newer versions incompatible with dependency constraints.
-Try `dart pub outdated` for more information.
-/Users/jpeiffer/flutter/bin/cache/dart-sdk/bin/dart 1.0.0
+scan_pubspec 1.0.0
 
 -f, --format                    Output format.
 
@@ -293,7 +266,6 @@ Try `dart pub outdated` for more information.
 -h, --help                      Show usage.
 -v, --version                   Show version.
 ```
-
 <!-- /markup:output -->
 
 #### GitHub Actions Example
@@ -332,7 +304,6 @@ Outputs emitted:
 ### `update_repo_properties`
 
 Updates GitHub custom repository properties from a YAML or JSON file.
-
 <!-- markup:process
 
 command: update_repo_properties
@@ -342,15 +313,8 @@ output:
   fence-type: bash
 /-->
 <!-- markup:output -->
-
 ```bash
-Resolving dependencies...
-Downloading packages...
-  petitparser 7.0.2 (7.1.0 available)
-No dependencies would change in `/Users/jpeiffer/git/ilt/gh_tools`.
-1 package has newer versions incompatible with dependency constraints.
-Try `dart pub outdated` for more information.
-/Users/jpeiffer/flutter/bin/cache/dart-sdk/bin/dart 1.0.0
+update_repo_properties 1.0.0
 
 -p, --properties    Properties file path (YAML/JSON).
                     (defaults to ".github/properties.yaml")
@@ -359,7 +323,6 @@ Try `dart pub outdated` for more information.
 -r, --repository    Repository to utilize.  Defaults to the current repository.
 -t, --token         GitHub access token.
 ```
-
 <!-- /markup:output -->
 
 #### Example Properties File (`.github/properties.yaml`)
