@@ -16,11 +16,24 @@ jobs:
     steps:
       - uses: islandlifetechnologies/gh_tools@v1
 
-      - shell: bash
+      - name: detect_changes
+        shell: bash
         run: |
           detect_changes --help
+
+      - name: pubspec_tag
+        shell: bash
+        run: |
           pubspec_tag --help
+
+      - name: scan_pubspec
+        shell: bash
+        run: |
           scan_pubspec --help
+
+      - name: update_repo_properties
+        shell: bash
+        run: |
           update_repo_properties --help
 
   test-macos:
@@ -29,11 +42,24 @@ jobs:
     steps:
       - uses: islandlifetechnologies/gh_tools@v1
 
-      - shell: bash
+      - name: detect_changes
+        shell: bash
         run: |
           detect_changes --help
+
+      - name: pubspec_tag
+        shell: bash
+        run: |
           pubspec_tag --help
+
+      - name: scan_pubspec
+        shell: bash
+        run: |
           scan_pubspec --help
+
+      - name: update_repo_properties
+        shell: bash
+        run: |
           update_repo_properties --help
 
   test-windows:
@@ -42,9 +68,22 @@ jobs:
     steps:
       - uses: islandlifetechnologies/gh_tools@v1
 
-      - shell: bash
+      - name: detect_changes
+        shell: bash
         run: |
           detect_changes --help
+
+      - name: pubspec_tag
+        shell: bash
+        run: |
           pubspec_tag --help
+
+      - name: scan_pubspec
+        shell: bash
+        run: |
           scan_pubspec --help
+
+      - name: update_repo_properties
+        shell: bash
+        run: |
           update_repo_properties --help
