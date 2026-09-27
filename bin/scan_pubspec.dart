@@ -25,7 +25,7 @@ void main(List<String> args) async {
       help: 'Path to pubspec.yaml.',
     );
 
-  final parsed = CliParser(parser: parser).parse(args);
+  final parsed = ArgUtil(parser: parser).parse(args);
   final format = parsed['format'] as String;
   final output = parsed['output'] as String?;
   final pubspecPath = parsed['pubspec'] as String;

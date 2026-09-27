@@ -10,7 +10,6 @@
 .svn/
 pubspec.lock
 output
-*.g.dart
 
 # IntelliJ related
 *.iml

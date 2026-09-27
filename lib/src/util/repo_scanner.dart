@@ -1,45 +1,49 @@
 import 'dart:io';
 
 import 'package:github/github.dart';
+import 'package:logging/logging.dart';
 
-/// Resolves repository slugs from environment variables or git remote URL.
-class RepoScanner({final String hostname = 'github.com'}) {
-  /// Returns the [RepositorySlug] from `GITHUB_REPOSITORY` or git remote
-  /// origin.
-  RepositorySlug getRepoSlugFromEnvironment({Map<String, String>? env}) {
-    final environment = env ?? Platform.environment;
-    var repoString = environment['GITHUB_REPOSITORY']?.trim();
+RepositorySlug getRepositorySlug({String? repository}) {
+  final logger = Logger('RepositorySlug');
+  RepositorySlug? slug;
 
-    if (repoString == null || repoString.isEmpty) {
-      repoString = getRepoSlugFromDirectory().fullName;
+  if (repository != null && repository.trim().isNotEmpty) {
+    final repo = repository;
+
+    slug = RepositorySlug.full(repo);
+    logger.info('Discovered CLI SLUG: $repo');
+  } else if (Platform.environment['GITHUB_REPOSITORY']?.isNotEmpty == true) {
+    final repo = Platform.environment['GITHUB_REPOSITORY']!;
+
+    slug = RepositorySlug.full(repo);
+    logger.info('Discovered ENV SLUG: $repo');
+  } else {
+    final ghResult = Process.runSync('git', ['remote', 'show', 'origin']);
+    final ghOutput = ghResult.stdout;
+
+    logger.info('GitHub Output:\n$ghOutput');
+
+    final regex = RegExp(
+      r'Push[^:]*:[^:]*:\/\/github.com\/(?<org>[^\/]*)\/(?<repo>[^\n\.\/]*)',
+    );
+    final matches = regex.allMatches(ghOutput.toString());
+
+    for (final match in matches) {
+      final org = match.namedGroup('org');
+      final repo = match.namedGroup('repo');
+
+      if (org != null && repo != null) {
+        slug = RepositorySlug(org, repo);
+
+        logger.info('Discovered SLUG: $org/$repo');
+        break;
+      }
     }
-
-    return RepositorySlug.full(repoString.trim());
   }
 
-  /// Parses the [RepositorySlug] from git remote origin URL in the current
-  /// directory.
-  RepositorySlug getRepoSlugFromDirectory() {
-    final result = Process.runSync('git', ['remote', 'get-url', 'origin']);
-
-    if (result.exitCode != 0) {
-      throw ProcessException(
-        'git',
-        ['remote', 'get-url', 'origin'],
-        (result.stderr as String).trim(),
-        result.exitCode,
-      );
-    }
-
-    final remoteUrl = result.stdout.toString().trim();
-    final escapedHost = RegExp.escape(hostname);
-    final pattern = RegExp('$escapedHost[:/](.+?)/(.+?)(?:\\.git)?\$');
-    final match = pattern.firstMatch(remoteUrl);
-
-    if (match == null) {
-      throw FormatException('Invalid repo URL: $remoteUrl');
-    }
-
-    return RepositorySlug(match.group(1)!, match.group(2)!);
+  if (slug == null) {
+    throw Exception('Unable to determine GitHub SLUG');
   }
+
+  return slug;
 }

@@ -22,11 +22,10 @@ void main(List<String> args) async {
       'mode',
       defaultsTo: 'or',
       allowed: ['and', 'or'],
-      help: 'Default filter mode.',
-    )
-    ..addOption('token', help: 'GitHub access token.');
+      help: 'Default filter mode. And requires all filters to match, or will match on any filter.',
+    );
 
-  final parsed = CliParser(parser: parser).parse(args);
+  final parsed = ArgUtil(parser: parser).parse(args, token: true);
   final filtersRaw = parsed['filters'] as String?;
 
   if (filtersRaw == null || filtersRaw.trim().isEmpty) {
@@ -35,15 +34,7 @@ void main(List<String> args) async {
   }
 
   try {
-    final token =
-        parsed['token'] as String? ??
-        Platform.environment['GITHUB_TOKEN'] ??
-        const String.fromEnvironment('GITHUB_TOKEN');
-
-    if (token.isEmpty) {
-      stderr.writeln('Missing GITHUB_TOKEN.');
-      exit(1);
-    }
+    final token = parsed.token!;
 
     final defaultMode = FilterMode.lookup(parsed['mode'] as String?);
     final yaml = yaon.parse(filtersRaw);

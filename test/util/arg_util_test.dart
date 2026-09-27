@@ -3,11 +3,11 @@ import 'package:gh_tools/gh_tools.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('CliParser', () {
+  group('ArgUtil', () {
     test('parses options normally', () {
       final parser = ArgParser()..addOption('name', abbr: 'n');
 
-      final cliParser = CliParser(parser: parser);
+      final cliParser = ArgUtil(parser: parser);
       final results = cliParser.parse(['--name', 'foo']);
 
       expect(results['name'], 'foo');
@@ -17,7 +17,7 @@ void main() {
 
     test('intercepts --help with allowExit: false', () {
       final parser = ArgParser();
-      final cliParser = CliParser(parser: parser);
+      final cliParser = ArgUtil(parser: parser);
 
       expect(
         () => cliParser.parse(['--help'], allowExit: false),
@@ -27,7 +27,7 @@ void main() {
 
     test('intercepts -h with allowExit: false', () {
       final parser = ArgParser();
-      final cliParser = CliParser(parser: parser);
+      final cliParser = ArgUtil(parser: parser);
 
       expect(
         () => cliParser.parse(['-h'], allowExit: false),
@@ -37,7 +37,7 @@ void main() {
 
     test('intercepts -v / --version with allowExit: false', () {
       final parser = ArgParser();
-      final cliParser = CliParser(parser: parser);
+      final cliParser = ArgUtil(parser: parser);
 
       expect(
         () => cliParser.parse(['-v'], allowExit: false),

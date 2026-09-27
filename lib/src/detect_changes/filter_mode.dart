@@ -7,13 +7,10 @@ enum FilterMode {
   or;
 
   /// Looks up a [FilterMode] from string, defaulting to [FilterMode.and].
-  static FilterMode lookup(String? mode) {
-    switch (mode?.toLowerCase().trim()) {
-      case 'or':
-        return FilterMode.or;
-      case 'and':
-      default:
-        return FilterMode.and;
-    }
-  }
+  static FilterMode lookup(String? mode) =>
+      switch (mode?.toLowerCase().trim()) {
+        'or' => FilterMode.or,
+        'and' => FilterMode.and,
+        _ => FilterMode.and,
+      };
 }

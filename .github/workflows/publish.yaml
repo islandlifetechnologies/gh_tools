@@ -1,0 +1,205 @@
+name: Tag & Publish (Markup)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish.yaml
+      - pubspec.yaml
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+
+      - name: Validate
+        shell: bash
+        run: |
+          set -e
+
+          dart pub get
+          dart format --set-exit-if-changed lib test
+          dart run build_runner build
+          dart analyze
+          dart test
+
+      - name: Update README.md
+        shell: bash
+        run: |
+          set -e
+
+          dart pub global activate markup
+          markup -i README.md
+
+      - name: Post Markdown to GitHub
+        uses: test-room-7/action-update-file@v2
+        with:
+          branch: ${{ github.head_ref || github.ref_name }}
+          file-path: |
+            **/*.md
+            **/*.png
+            **/*.svg
+          commit-msg: "[actions skip]: Auto-generated Markdown TOCs"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compile Binary
+        run: |
+          dart compile exe bin/detect_changes.dart -o bin/detect_changes
+          dart compile exe bin/pubspec_tag.dart -o bin/pubspec_tag
+          dart compile exe bin/scan_pubspec.dart -o bin/scan_pubspec
+          dart compile exe bin/update_repo_properties.dart -o bin/update_repo_properties
+
+      - name: Prepare Git
+        shell: bash
+        run: |
+          set -e
+
+          git config --global user.email "action@github.com"
+          git config --global user.name "Github Action"
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          path: outbin
+          ref: bin
+
+      - name: Update Binary
+        shell: bash
+        run: |
+          set -e
+
+          mkdir -p outbin/linux/
+          cp -f bin/detect_changes outbin/linux/detect_changes
+          cp -f bin/pubspec_tag outbin/linux/pubspec_tag
+          cp -f bin/scan_pubspec outbin/linux/scan_pubspec
+          cp -f bin/update_repo_properties outbin/linux/update_repo_properties
+          chmod +x outbin/linux/*
+          cd outbin
+          git add .
+          git commit --allow-empty -m "Update linux binary"
+          git push
+
+      # - name: Create Tag
+      #   shell: bash
+      #   run: |
+      #     set -e
+
+      #     dart pub global activate -path .
+      #     pubspec_tag --token "${{ secrets.GITHUB_TOKEN }}"
+
+      # - name: Publish
+      #   shell: bash
+      #   run: |
+      #     set -e
+
+      #     set +e
+      #     mkdir ~/.config
+      #     mkdir ~/.config/dart
+
+      #     set -e
+      #     printf '${{ secrets.PUB_CREDENTIALS }}' > ~/.config/dart/pub-credentials.json
+
+      #     dart pub publish --force
+
+  build_macos:
+    needs: build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+
+      - name: Compile Binary
+        run: |
+          dart compile exe bin/detect_changes.dart -o bin/detect_changes
+          dart compile exe bin/pubspec_tag.dart -o bin/pubspec_tag
+          dart compile exe bin/scan_pubspec.dart -o bin/scan_pubspec
+          dart compile exe bin/update_repo_properties.dart -o bin/update_repo_properties
+
+      - name: Prepare Git
+        shell: bash
+        run: |
+          set -e
+
+          git config --global user.email "action@github.com"
+          git config --global user.name "Github Action"
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          path: outbin
+          ref: bin
+
+      - name: Update Binary
+        shell: bash
+        run: |
+          set -e
+
+          mkdir -p outbin/macos/
+          cp -f bin/detect_changes outbin/macos/detect_changes
+          cp -f bin/pubspec_tag outbin/macos/pubspec_tag
+          cp -f bin/scan_pubspec outbin/macos/scan_pubspec
+          cp -f bin/update_repo_properties outbin/macos/update_repo_properties
+          chmod +x outbin/macos/*
+          cd outbin
+          git add .
+          git commit --allow-empty -m "Update macos binary"
+          git push
+
+  bin_windows:
+    needs: build_macos
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+
+      - name: Prepare Git
+        shell: bash
+        run: |
+          set -e
+
+          git config --global user.email "action@github.com"
+          git config --global user.name "Github Action"
+
+      - name: Compile Binary
+        run: |
+          dart compile exe bin/detect_changes.dart -o bin/detect_changes.exe
+          dart compile exe bin/pubspec_tag.dart -o bin/pubspec_tag.exe
+          dart compile exe bin/scan_pubspec.dart -o bin/scan_pubspec.exe
+          dart compile exe bin/update_repo_properties.dart -o bin/update_repo_properties.exe
+
+      - name: Prepare Git
+        shell: bash
+        run: |
+          set -e
+
+          git config set user.name "${{ github.actor }}"
+          git config set user.email "${{ github.actor_email }}"
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          path: outbin
+          ref: bin
+
+      - name: Update Binary
+        shell: bash
+        run: |
+          set -e
+
+          mkdir outbin/windows 2>nul
+          cp -f bin/*.exe outbin/windows/
+          chmod +x outbin/windows/*.exe
+          cd outbin
+          git add .
+          git commit --allow-empty -m "Update windows binary"
+          git push

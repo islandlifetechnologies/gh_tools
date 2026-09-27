@@ -3,8 +3,10 @@
 Tools and CLI binaries for common GitHub Actions workflows and repository automation tasks in Dart and Flutter projects.
 
 **Table of Contents**
+
 <!-- markup:toc /-->
 <!-- markup:output -->
+
 - [Installation](#installation)
 - [CLI Tools](#cli-tools)
   - [detect_changes](#detect_changes)
@@ -18,7 +20,7 @@ Tools and CLI binaries for common GitHub Actions workflows and repository automa
   - [Evaluating Change Filters](#evaluating-change-filters)
   - [Emitting Outputs](#emitting-outputs)
   - [Managing Custom Properties](#managing-custom-properties)
-<!-- /markup:output -->
+  <!-- /markup:output -->
 
 ---
 
@@ -38,36 +40,146 @@ dart pub global activate gh_tools
 
 Evaluates changed files for a PR or push against defined glob filters.
 
-```bash
-Usage: detect_changes [arguments]
-    --filters (mandatory)    Filter definitions (YAML/JSON).
-    --mode                   Default filter mode.
-                             [and, or (default)]
-    --token                  GitHub personal access token.
--h, --help                   Show usage.
--v, --version                Show version.
-```
+<!-- markup:process
+
+command: detect_changes
+args:
+  - --help
+output:
+  fence-type: bash
+/-->
 
 #### GitHub Actions Example
 
 ```yaml
-- name: Detect Changes
-  id: changes
-  run: |
-    dart run gh_tools:detect_changes \
-      --token "${{ secrets.GITHUB_TOKEN }}" \
-      --filters '
-        core:
-          - "packages/core/**"
-        web:
-          - "packages/web/**"
-        docs:
-          - "**/*.md"
-      '
+name: Validate PR (Matrix)
 
-- name: Build Web
-  if: fromJSON(steps.changes.outputs.CHANGES).web == true
-  run: dart run build_runner build
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  actions: read
+  contents: write
+  id-token: write
+  packages: write
+  pull-requests: write
+  security-events: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  filters: |
+    package_one:
+      paths:
+        - packages/package_one/**
+    package_two:
+      paths:
+        - packages/package_two/**
+    package_three:
+      paths:
+        - packages/package_three/**
+  doc_filters: |
+    readme:
+      paths:
+        - README.md
+
+jobs:
+  detect_changes:
+    name: "Detect Changes"
+    runs-on: ubuntu-latest
+    outputs:
+      CHANGES: ${{ steps.detect_changes.outputs.CHANGES }}
+      CHANGES_ARRAY: ${{ steps.detect_changes.outputs.CHANGES_ARRAY }}
+      DOC_CHANGES: ${{ steps.detect_doc_changes.outputs.CHANGES }}
+    timeout-minutes: 180
+    steps:
+      - name: Checkout Code Base
+        uses: actions/checkout@v7
+        path: bin
+        ref: bin
+        repository: https://github.com/islandlifetechnologies/gh_tools
+
+      - name: Look for Changes
+        id: detect_changes
+        shell: bash
+        run: |
+          bin/linux/detect_changes \
+            --filters "${{ env.filters }}" \
+            --token "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Look for Changes
+        id: detect_doc_changes
+        shell: bash
+        run: |
+          bin/linux/detect_changes \
+            --filters "${{ env.doc_filters }}" \
+            --token "${{ secrets.GITHUB_TOKEN }}"
+
+  ## Utilizes the CHANGES map to specifically target a single change set.
+  update_docs:
+    needs:
+      - detect_changes
+    if: fromJSON(needs.detect_changes.outputs.CHANGES).readme == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code Base
+        uses: actions/checkout@v7
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+
+      - name: Run markup
+        run: |
+          dart pub global activate markup
+          markup -i README.md
+
+      - name: Post Markdown to GitHub
+        uses: test-room-7/action-update-file@v2
+        with:
+          branch: ${{ github.head_ref || github.ref_name }}
+          file-path: |
+            **/*.md
+            **/*.png
+            **/*.svg
+          commit-msg: "[actions skip]: Auto-generated Markdown TOCs"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  ## Utilizes the CHANGES_ARRAY to build a matrix of packages that have changed.
+  ## Each package is validated in parallel.
+  monorepo_split:
+    needs:
+      - detect_changes
+    if: ${{ needs.detect_changes.outputs.CHANGES_ARRAY != '[]' && needs.detect_changes.outputs.CHANGES_ARRAY != '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.detect_changes.outputs.CHANGES_ARRAY) }}
+    name: "Validate ${{ matrix.package }}"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code Base
+        uses: actions/checkout@v7
+        repository: https://github.com/islandlifetechnologies/gh_tools
+        ref: bin
+
+      - uses: ./.github/actions/setup_jfrog
+        id: setup_jfrog
+
+      - name: Setup Dart
+        uses: ./.github/actions/setup_dart
+        with:
+          jfrog-token: ${{ steps.setup_jfrog.outputs.JFROG_TOKEN }}
+
+      - name: ${{ matrix.package }}
+        uses: ./.github/actions/dart_validate
+        with:
+          code-coverage: skip
+          jfrog-token: ${{ steps.setup_jfrog.outputs.JFROG_TOKEN }}
+          lock-file: ./pubspec.lock
+          path: packages/${{ matrix.package }}
 ```
 
 Outputs written to `$GITHUB_OUTPUT`:

@@ -12,10 +12,10 @@ void main(List<String> args) async {
       abbr: 'p',
       defaultsTo: '.github/properties.yaml',
       help: 'Properties file path (YAML/JSON).',
-    )
-    ..addOption('token', help: 'GitHub personal access token.');
+    );
 
-  final parsed = CliParser(parser: parser).parse(args);
+  final parsed = ArgUtil(parser: parser)
+      .parse(args, repository: true, token: true);
   final fileName = parsed['properties'] as String;
   final file = File(fileName);
 
@@ -25,17 +25,6 @@ void main(List<String> args) async {
   }
 
   try {
-    final token =
-        (parsed['token'] as String? ??
-                Platform.environment['GITHUB_TOKEN'] ??
-                const String.fromEnvironment('GITHUB_TOKEN'))
-            .trim();
-
-    if (token.isEmpty) {
-      stderr.writeln('Missing GITHUB_TOKEN.');
-      exit(1);
-    }
-
     final parsedYaml = yaon.parse(file.readAsStringSync());
     if (parsedYaml is! Map) {
       stderr.writeln('Properties file must contain a map.');
@@ -43,13 +32,10 @@ void main(List<String> args) async {
     }
     final yaml = Map<String, dynamic>.from(parsedYaml);
 
-    final gh = GitHub(auth: Authentication.bearerToken(token));
+    final gh = GitHub(auth: Authentication.bearerToken(parsed.token!));
     final client = GitHubClient(gh: gh);
 
-    await client.updateProperties(
-      RepoScanner().getRepoSlugFromEnvironment(),
-      yaml,
-    );
+    await client.updateProperties(parsed.repository!, yaml);
     exit(0);
   } catch (e, stack) {
     stderr.writeln('Error: $e');
