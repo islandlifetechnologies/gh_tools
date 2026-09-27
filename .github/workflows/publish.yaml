@@ -197,9 +197,10 @@ jobs:
       - name: Update Binary
         shell: bash
         run: |
-          set -e
+          set +e
 
-          mkdir outbin/windows 2>nul
+          mkdir -p outbin/windows/
+          set -e
           cp -f bin/*.exe outbin/windows/
           chmod +x outbin/windows/*.exe
           cd outbin
