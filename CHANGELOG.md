@@ -1,3 +1,7 @@
+## 1.1.2
+
+- Switched to using `ilt_lints` v2.0.0.
+
 ## 1.1.1
 
 - Added exclude for pubspec.g.dart in analysis_options.yaml.
