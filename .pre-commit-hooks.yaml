@@ -6,10 +6,10 @@
   files: \.dart$
   require_serial: true
 
-- id: scan_packages
+- id: scan-packages
   name: Scan Monorepo Packages
   description: Ensure all folders in packages/ have a corresponding step in .pre-commit-config.yaml.
-  entry: dart_pre_commit --step=scan_packages
+  entry: dart_pre_commit --step=scan-packages
   language: dart
   always_run: true
   pass_filenames: false

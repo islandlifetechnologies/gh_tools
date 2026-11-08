@@ -10,10 +10,10 @@ import 'package:meta/meta.dart';
 /// Detects file changes in a GitHub push or pull request event
 /// and evaluates them against defined filters.
 class ChangeProcessor({
-    @visibleForTesting Map<String, String>? env,
-    required final Map<String, Filters> filters,
-    required final GitHub _gh,
-  }) {
+  @visibleForTesting Map<String, String>? env,
+  required final Map<String, Filters> filters,
+  required final GitHub _gh,
+}) {
   this : _env = env ?? Platform.environment;
 
   static const kEnvGitHubEventName = 'GITHUB_EVENT_NAME';

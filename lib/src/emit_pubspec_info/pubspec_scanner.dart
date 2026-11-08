@@ -1,10 +1,8 @@
-import 'dart:io' hide Directory, File, FileSystemEntity, Link;
-
 import 'package:file/file.dart';
 import 'package:pubspec_parse/pubspec_parse.dart';
 
 /// Scans a pubspec.yaml file and extracts metadata for GitHub Actions.
-class PubspecScanner() {
+class const PubspecScanner() {
   /// Pubspec description key.
   static const kPubspecDescription = 'PUBSPEC_DESCRIPTION';
 

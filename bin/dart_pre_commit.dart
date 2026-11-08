@@ -5,7 +5,6 @@ import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:gh_tools/gh_tools.dart';
 import 'package:gh_tools/src/util/pubspec.dart';
-import 'package:pub_semver/pub_semver.dart';
 import 'package:yaml_writer/yaml_writer.dart';
 import 'package:yaon/yaon.dart';
 
@@ -54,7 +53,7 @@ Future<void> main(List<String> args) async {
 
   if (!parsed.parsed.wasParsed('path') && rest.isNotEmpty) {
     final first = rest.first;
-    if (fs.directory(first).existsSync() || !first.endsWith('.dart')) {
+    if (fs.directory(first).existsSync()) {
       targetPath = rest.removeAt(0);
     }
   }
@@ -87,7 +86,7 @@ Future<void> main(List<String> args) async {
       : relPrefix.replaceAll(RegExp(r'/+$'), '');
 
   try {
-    if (step == 'scan_packages') {
+    if (step == 'scan-packages') {
       _stepScanPackages(
         absTargetPath: absTargetPath,
         displayPath: displayPath,
@@ -96,7 +95,7 @@ Future<void> main(List<String> args) async {
       exit(0);
     }
     if (step == 'install') {
-      _installHooks(
+      await _installHooks(
         absTargetPath: absTargetPath,
         displayPath: displayPath,
         fs: fs,
@@ -241,8 +240,6 @@ Future<void> _installHooks({
 }) async {
   stdout.writeln('Installing pre-commit hooks...');
 
-  final version = Version.parse(kPubspec.version);
-
   final configFile = fs.file('$absTargetPath/.pre-commit-config.yaml');
   if (!configFile.existsSync()) {
     configFile.createSync(recursive: true);
@@ -250,16 +247,13 @@ Future<void> _installHooks({
 
   final packagesDir = fs.directory('$absTargetPath/packages');
   if (packagesDir.existsSync()) {
-    stdout.writeln(
-      '==> [$displayPath] No packages directory found. Passing scan_packages.',
-    );
     const defaultSteps = ['scan-packages'];
 
     final config = <String, dynamic>{
       'repos': [
         {
           'repo': 'https://github.com/islandlifetechnologies/gh_tools',
-          'rev': 'v${version.major}',
+          'rev': 'v${kPubspec.version}',
           'hooks': [
             for (final step in defaultSteps) {'id': step, 'name': step},
           ],
@@ -273,26 +267,27 @@ Future<void> _installHooks({
     _stepScanPackages(
       absTargetPath: absTargetPath,
       displayPath: displayPath,
+      failOnModify: false,
       fs: fs,
     );
   } else {
-    const defaultSteps = [
-      'pub-get',
-      'build-runner',
-      'format',
-      'analyze',
-      'test',
-      'changelog-version',
-      'branch-version',
-    ];
+    const defaultSteps = {
+      'pub-get': 'Dart Pub Get',
+      'build-runner': 'Run build_runner',
+      'format': 'Format code',
+      'analyze': 'Run "dart analyze"',
+      'test': 'Dart / Flutter test',
+      'changelog-version': 'Verify Changelog Version',
+      'branch-version': 'Verify Branch Version',
+    };
 
     final config = <String, dynamic>{
       'repos': [
         {
           'repo': 'https://github.com/islandlifetechnologies/gh_tools',
-          'rev': 'v${version.major}',
+          'rev': 'v${kPubspec.version}',
           'hooks': [
-            for (final step in defaultSteps) {'id': step, 'name': step},
+            for (final step in defaultSteps.entries) {'id': step.key},
           ],
         },
       ],
@@ -303,7 +298,7 @@ Future<void> _installHooks({
     );
   }
 
-  await _runCommand('pre-commit', ['install'], workingDirectory: '.');
+  await _runCommand('pre-commit', ['install'], workingDirectory: absTargetPath);
 }
 
 String? _extractPackageFromHook(Map<dynamic, dynamic> hook) {
@@ -784,14 +779,7 @@ Future<void> _stepFormat({
       throw _StepFailedException(exitCode: formatResult.exitCode);
     }
 
-    final diffResult = await Process.run(
-      'git',
-      ['diff', '--quiet', '--', folder],
-      runInShell: Platform.isWindows,
-      workingDirectory: absTargetPath,
-    );
-
-    if (diffResult.exitCode != 0 || changedRegex.hasMatch(out)) {
+    if (changedRegex.hasMatch(out)) {
       stdout.writeln(
         '==> [$displayPath] Re-adding changed files in $folder...',
       );
@@ -818,12 +806,13 @@ Future<void> _stepPubGet({
 void _stepScanPackages({
   required String absTargetPath,
   required String displayPath,
+  bool failOnModify = true,
   required FileSystem fs,
 }) {
   final packagesDir = fs.directory('$absTargetPath/packages');
   if (!packagesDir.existsSync()) {
     stdout.writeln(
-      '==> [$displayPath] No packages directory found. Passing scan_packages.',
+      '==> [$displayPath] No packages directory found. Passing scan-packages.',
     );
     return;
   }
@@ -878,7 +867,9 @@ void _stepScanPackages({
       if (hooks is List) {
         return hooks.whereType<Map>().any(
           (h) =>
-              h['id'] == 'scan_packages' || _extractPackageFromHook(h) != null,
+              h['id'] == 'scan-packages' ||
+              h['id'] == 'scan_packages' ||
+              _extractPackageFromHook(h) != null,
         );
       }
       return false;
@@ -938,10 +929,12 @@ void _stepScanPackages({
     _writeYamlMap(buf, rootMap, indent: 0);
     configFile.writeAsStringSync(buf.toString());
 
-    throw _StepFailedException(
-      message:
-          'Alert: $configFileName was modified to sync with the packages folder. Please stage the updated $configFileName and re-run pre-commit.',
-    );
+    if (failOnModify) {
+      throw _StepFailedException(
+        message:
+            'Alert: $configFileName was modified to sync with the packages folder. Please stage the updated $configFileName and re-run pre-commit.',
+      );
+    }
   } else if (parsedYaml is List) {
     final hooks = parsedYaml
         .whereType<Map>()
@@ -991,10 +984,12 @@ void _stepScanPackages({
     _writeYamlList(buf, updatedHooks, blankLineBetweenItems: true, indent: 0);
     configFile.writeAsStringSync(buf.toString());
 
-    throw _StepFailedException(
-      message:
-          'Alert: $configFileName was modified to sync with the packages folder. Please stage the updated $configFileName and re-run pre-commit.',
-    );
+    if (failOnModify) {
+      throw _StepFailedException(
+        message:
+            'Alert: $configFileName was modified to sync with the packages folder. Please stage the updated $configFileName and re-run pre-commit.',
+      );
+    }
   } else {
     throw _StepFailedException(
       message: "Error: Unable to parse '$configFileName'.",

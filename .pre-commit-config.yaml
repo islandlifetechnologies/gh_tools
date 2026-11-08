@@ -1,18 +1,45 @@
 repos:
-  - repo: https://github.com/islandlifetechnologies/gh_tools
-    rev: v1
+  - repo: local
     hooks:
       - id: pub-get
-        name: pub-get
+        name: Dart Pub Get
+        entry: dart run bin/dart_pre_commit.dart --step=pub-get
+        language: system
+        files: \.dart$
+        require_serial: true
       - id: build-runner
-        name: build-runner
+        name: Run build_runner
+        entry: dart run bin/dart_pre_commit.dart --step=build-runner
+        language: system
+        files: \.dart$
+        require_serial: true
       - id: format
-        name: format
+        name: Format code
+        entry: dart run bin/dart_pre_commit.dart --step=format
+        language: dart
+        files: \.dart$
+        require_serial: true
       - id: analyze
-        name: analyze
+        name: Run "dart analyze"
+        entry: dart run bin/dart_pre_commit.dart --step=analyze
+        language: system
+        files: \.dart$
+        require_serial: true
       - id: test
-        name: test
+        name: Dart / Flutter test
+        entry: dart run bin/dart_pre_commit.dart --step=test
+        language: system
+        files: \.dart$
+        require_serial: true
       - id: changelog-version
-        name: changelog-version
+        name: Verify Changelog Version
+        entry: dart run bin/dart_pre_commit.dart --step=changelog-version
+        language: system
+        files: \.dart$
+        require_serial: true
       - id: branch-version
-        name: branch-version
+        name: Verify Branch Version
+        entry: dart run bin/dart_pre_commit.dart --step=branch-version
+        language: system
+        files: \.dart$
+        require_serial: true

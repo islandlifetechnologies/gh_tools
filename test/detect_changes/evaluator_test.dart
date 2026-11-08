@@ -28,10 +28,7 @@ void main() {
     });
 
     test('OR mode: returns true if any pattern matches', () {
-      final filters = const Filters(
-        mode: FilterMode.or,
-        paths: ['lib/**', 'bin/**'],
-      );
+      const filters = Filters(mode: FilterMode.or, paths: ['lib/**', 'bin/**']);
 
       expect(
         evaluator.evaluate(files: ['lib/client.dart'], filters: filters),
@@ -45,7 +42,7 @@ void main() {
     });
 
     test('AND mode: returns true only if all patterns match', () {
-      final filters = const Filters(
+      const filters = Filters(
         mode: FilterMode.and,
         paths: ['lib/**', 'test/**'],
       );
