@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:clock/clock.dart';
 import 'package:file/file.dart';
 import 'package:logging/logging.dart';
 
@@ -27,7 +28,7 @@ class GitHubOutputEmitter({required final FileSystem fs}) {
     for (final entry in values.entries) {
       final value = entry.value;
       if (value.contains('\n')) {
-        final delimiter = 'EOF_${DateTime.now().millisecondsSinceEpoch}';
+        final delimiter = 'EOF_${clock.now().millisecondsSinceEpoch}';
         buffer.writeln('${entry.key}<<$delimiter');
         buffer.writeln(value);
         buffer.writeln(delimiter);

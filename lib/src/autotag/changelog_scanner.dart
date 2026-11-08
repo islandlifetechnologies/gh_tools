@@ -4,18 +4,12 @@ import 'package:logging/logging.dart';
 import 'package:pub_semver/pub_semver.dart';
 
 /// Scans the CHANGELOG contents and can return the changes for a given version.
-class ChangelogScanner {
-  const ChangelogScanner(
-    this.changelog, {
-    this.versionLineRegex = r'^#+\s+.*\d+\.\d+\.\d+.*',
-    this.versionRegex = r'\d+\.\d+\.\d+(\+\d*)?(-[\w\d]*)?',
-  });
-
+class const ChangelogScanner(
+    final String changelog, {
+    final String versionLineRegex = r'^#+\s+.*\d+\.\d+\.\d+.*',
+    final String versionRegex = r'\d+\.\d+\.\d+(\+\d*)?(-[\w\d]*)?',
+  }) {
   static final _logger = Logger('ChangelogScanner');
-
-  final String changelog;
-  final String versionLineRegex;
-  final String versionRegex;
 
   /// Returns the changes from the CHANGELOG for the given version.  Will return
   /// null if the version is not found.

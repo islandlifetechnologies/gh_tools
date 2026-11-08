@@ -9,24 +9,19 @@ import 'package:meta/meta.dart';
 
 /// Detects file changes in a GitHub push or pull request event
 /// and evaluates them against defined filters.
-class ChangeProcessor {
-  /// Creates a change processor with the given [filters] and [gh] client.
-  ChangeProcessor({
-    required this.filters,
-    required this._gh,
+class ChangeProcessor({
     @visibleForTesting Map<String, String>? env,
-  }) : _env = env ?? Platform.environment;
+    required final Map<String, Filters> filters,
+    required final GitHub _gh,
+  }) {
+  this : _env = env ?? Platform.environment;
 
   static const kEnvGitHubEventName = 'GITHUB_EVENT_NAME';
   static const kEnvGitHubRefName = 'GITHUB_REF_NAME';
   static const kEnvGitHubRepository = 'GITHUB_REPOSITORY';
   static const kEnvGitHubSha = 'GITHUB_SHA';
 
-  /// Named filters to evaluate against changed files.
-  final Map<String, Filters> filters;
-
   final Map<String, String> _env;
-  final GitHub _gh;
   final _logger = Logger('ChangeProcessor');
 
   /// Processes event changes and writes outputs if GITHUB_OUTPUT is set.

@@ -15,13 +15,13 @@ void main(List<String> args) async {
   final parser = ArgParser()
     ..addOption(
       'filters',
-      mandatory: true,
       help: 'Filter definitions (YAML/JSON).',
+      mandatory: true,
     )
     ..addOption(
       'mode',
-      defaultsTo: 'or',
       allowed: ['and', 'or'],
+      defaultsTo: 'or',
       help: 'Default filter mode. And requires all filters to match, or will match on any filter.',
     );
 

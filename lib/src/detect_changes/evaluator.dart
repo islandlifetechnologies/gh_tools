@@ -4,7 +4,7 @@ import 'package:logging/logging.dart';
 import '../detect_changes.dart';
 
 /// Evaluates file paths against glob patterns defined in [Filters].
-class Evaluator {
+class Evaluator() {
   final _logger = Logger('Evaluator');
 
   /// Evaluates whether the changed [files] match the given [filters].

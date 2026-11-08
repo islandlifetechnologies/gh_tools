@@ -8,12 +8,12 @@ void main() {
 
     test('throws StateError when GITHUB_REPOSITORY is missing', () {
       final processor = ChangeProcessor(
-        filters: {},
-        gh: gh,
         env: {
           ChangeProcessor.kEnvGitHubEventName: 'push',
           ChangeProcessor.kEnvGitHubSha: 'abc1234',
         },
+        filters: {},
+        gh: gh,
       );
 
       expect(() => processor.process(), throwsStateError);
@@ -21,13 +21,13 @@ void main() {
 
     test('throws FormatException when PR number is invalid', () {
       final processor = ChangeProcessor(
-        filters: {},
-        gh: gh,
         env: {
           ChangeProcessor.kEnvGitHubRepository: 'owner/repo',
           ChangeProcessor.kEnvGitHubEventName: 'pull_request',
           ChangeProcessor.kEnvGitHubRefName: 'not-a-number/merge',
         },
+        filters: {},
+        gh: gh,
       );
 
       expect(() => processor.process(), throwsFormatException);
@@ -35,13 +35,13 @@ void main() {
 
     test('throws StateError when push SHA is missing', () {
       final processor = ChangeProcessor(
-        filters: {},
-        gh: gh,
         env: {
           ChangeProcessor.kEnvGitHubRepository: 'owner/repo',
           ChangeProcessor.kEnvGitHubEventName: 'push',
           ChangeProcessor.kEnvGitHubRefName: 'main',
         },
+        filters: {},
+        gh: gh,
       );
 
       expect(() => processor.process(), throwsStateError);
@@ -49,13 +49,13 @@ void main() {
 
     test('throws UnsupportedError for unsupported event', () {
       final processor = ChangeProcessor(
-        filters: {},
-        gh: gh,
         env: {
           ChangeProcessor.kEnvGitHubRepository: 'owner/repo',
           ChangeProcessor.kEnvGitHubEventName: 'workflow_dispatch',
           ChangeProcessor.kEnvGitHubRefName: 'main',
         },
+        filters: {},
+        gh: gh,
       );
 
       expect(() => processor.process(), throwsUnsupportedError);

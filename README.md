@@ -7,6 +7,9 @@ Tools and CLI binaries for common GitHub Actions workflows and repository automa
 <!-- markup:output -->
 - [Installation](#installation)
 - [Tools / Binaries](#tools-binaries)
+  - [dart_pre_commit](#dart_pre_commit)
+    - [Pre-Commit Example (Single Package)](#pre-commit-example-single-package)
+    - [Pre-Commit Example (Monorepo / Custom Path)](#pre-commit-example-monorepo--custom-path)
   - [detect_changes](#detect_changes)
     - [GitHub Actions Example](#github-actions-example)
   - [pubspec_tag](#pubspec_tag)
@@ -38,6 +41,81 @@ That will automatically get the latest binaries for either Linux, MacOS, or Wind
 ---
 
 ## Tools / Binaries
+
+### `dart_pre_commit`
+
+Runs Dart and Flutter pre-commit validation steps when `.dart` files change within a target project path.
+<!-- markup:process
+
+command: dart_pre_commit
+args:
+  - --help
+output:
+  fence-type: bash
+/-->
+<!-- markup:output -->
+```bash
+dart_pre_commit 1.0.0
+
+-p, --path                       The path to the project to run the steps against.
+                                 (defaults to ".")
+-s, --step                       The pre-commit step to execute.
+
+          [all] (default)        Run all pre-commit steps sequentially.
+          [analyze]              Run "dart analyze".
+          [branch-version]       Verify that the version in pubspec.yaml does not match the default branch.
+          [build-runner]         If build_runner is a dependency or dev_dependency, run "dart run build_runner build".
+          [changelog-version]    Verify that the version in pubspec.yaml has an entry in CHANGELOG.md.
+          [format]               Run "dart format" on each existing folder and re-add changed files.
+          [pub-get]              Run "dart pub get".
+          [scan_packages]        Scan the packages folder and sync package entries in .pre-commit-config.yaml.
+          [test]                 Run "flutter test" or "dart test" if a "test" folder exists.
+
+-h, --help                       Show usage.
+-v, --version                    Show version.
+```
+<!-- /markup:output -->
+
+#### Pre-Commit Example (Single Package)
+
+```yaml
+repos:
+  - repo: https://github.com/islandlifetechnologies/gh_tools
+    rev: v1
+    hooks:
+      - id: pub-get
+      - id: build-runner
+      - id: format
+      - id: analyze
+      - id: test
+      - id: changelog-version
+      - id: branch-version
+```
+
+#### Pre-Commit Example (Monorepo / Custom Path)
+
+For monorepos with a `packages/` folder, include the `scan_packages` hook step. When `scan_packages` runs, it:
+
+1. Scans all directories inside `packages/`.
+2. Scans `.pre-commit-config.yaml` and ensures that each package has an `all` hook step (`--path=packages/<package>`) in alphabetical order.
+3. Automatically adds missing packages, removes deleted packages, and sorts package entries alphabetically. If `.pre-commit-config.yaml` is modified, `scan_packages` fails the step and alerts you to stage the updated file and re-run `pre-commit`.
+4. Passes automatically if no `packages/` folder exists.
+
+```yaml
+repos:
+  - repo: https://github.com/islandlifetechnologies/gh_tools
+    rev: v1
+    hooks:
+      - id: scan_packages
+      - id: all
+        name: package_one
+        args: [--path=packages/package_one]
+      - id: all
+        name: package_two
+        args: [--path=packages/package_two]
+```
+
+---
 
 ### `detect_changes`
 

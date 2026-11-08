@@ -1,9 +1,10 @@
-import 'dart:io';
+import 'dart:io' hide Directory, File, FileSystemEntity, Link;
 
+import 'package:file/file.dart';
 import 'package:pubspec_parse/pubspec_parse.dart';
 
 /// Scans a pubspec.yaml file and extracts metadata for GitHub Actions.
-class PubspecScanner {
+class PubspecScanner() {
   /// Pubspec description key.
   static const kPubspecDescription = 'PUBSPEC_DESCRIPTION';
 
@@ -58,9 +59,9 @@ class PubspecScanner {
     return PubspecInfo(
       description: pubspec.description ?? '',
       flutterSdk: pubspec.dependencies.containsKey('flutter'),
-      name: name,
       major: version.major,
       minor: version.minor,
+      name: name,
       patch: version.patch,
       preRelease: version.preRelease.join('.'),
       publishTo: pubspec.publishTo ?? '',
@@ -71,12 +72,12 @@ class PubspecScanner {
 }
 
 /// Extracted metadata from a pubspec.yaml file.
-class PubspecInfo({
+class const PubspecInfo({
   required final String description,
   required final bool flutterSdk,
-  required final String name,
   required final int major,
   required final int minor,
+  required final String name,
   required final int patch,
   required final String preRelease,
   required final String publishTo,

@@ -9,13 +9,13 @@ void main(List<String> args) async {
     ..addOption(
       'format',
       abbr: 'f',
-      defaultsTo: 'github',
-      help: 'Output format.',
       allowed: ['github', 'json'],
       allowedHelp: {
         'github': 'GitHub Actions output format',
         'json': 'JSON format',
       },
+      defaultsTo: 'github',
+      help: 'Output format.',
     )
     ..addOption('output', abbr: 'o', help: 'Output file path.')
     ..addOption(

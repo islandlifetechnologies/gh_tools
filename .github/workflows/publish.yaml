@@ -35,6 +35,7 @@ jobs:
 
       - name: Compile Binary
         run: |
+          dart compile exe bin/dart_pre_commit.dart -o bin/dart_pre_commit
           dart compile exe bin/detect_changes.dart -o bin/detect_changes
           dart compile exe bin/pubspec_tag.dart -o bin/pubspec_tag
           dart compile exe bin/scan_pubspec.dart -o bin/scan_pubspec
@@ -79,6 +80,7 @@ jobs:
           set -e
 
           mkdir -p outbin/linux/
+          cp -f bin/dart_pre_commit outbin/linux/dart_pre_commit
           cp -f bin/detect_changes outbin/linux/detect_changes
           cp -f bin/pubspec_tag outbin/linux/pubspec_tag
           cp -f bin/scan_pubspec outbin/linux/scan_pubspec
@@ -121,6 +123,7 @@ jobs:
 
       - name: Compile Binary
         run: |
+          dart compile exe bin/dart_pre_commit.dart -o bin/dart_pre_commit
           dart compile exe bin/detect_changes.dart -o bin/detect_changes
           dart compile exe bin/pubspec_tag.dart -o bin/pubspec_tag
           dart compile exe bin/scan_pubspec.dart -o bin/scan_pubspec
@@ -146,6 +149,7 @@ jobs:
           set -e
 
           mkdir -p outbin/macos/
+          cp -f bin/dart_pre_commit outbin/macos/dart_pre_commit
           cp -f bin/detect_changes outbin/macos/detect_changes
           cp -f bin/pubspec_tag outbin/macos/pubspec_tag
           cp -f bin/scan_pubspec outbin/macos/scan_pubspec
@@ -175,6 +179,7 @@ jobs:
 
       - name: Compile Binary
         run: |
+          dart compile exe bin/dart_pre_commit.dart -o bin/dart_pre_commit.exe
           dart compile exe bin/detect_changes.dart -o bin/detect_changes.exe
           dart compile exe bin/pubspec_tag.dart -o bin/pubspec_tag.exe
           dart compile exe bin/scan_pubspec.dart -o bin/scan_pubspec.exe

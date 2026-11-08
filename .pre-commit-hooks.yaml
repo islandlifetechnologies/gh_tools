@@ -1,0 +1,72 @@
+- id: all
+  name: Dart Pre-Commit (All Steps)
+  description: Run all pre-commit steps sequentially when Dart files change.
+  entry: dart_pre_commit --step=all
+  language: dart
+  files: \.dart$
+  require_serial: true
+
+- id: scan_packages
+  name: Scan Monorepo Packages
+  description: Ensure all folders in packages/ have a corresponding step in .pre-commit-config.yaml.
+  entry: dart_pre_commit --step=scan_packages
+  language: dart
+  always_run: true
+  pass_filenames: false
+  require_serial: true
+
+- id: pub-get
+  name: Dart Pub Get
+  description: Run "dart pub get" when Dart files change.
+  entry: dart_pre_commit --step=pub-get
+  language: dart
+  files: \.dart$
+  require_serial: true
+
+- id: build-runner
+  name: Dart Build Runner
+  description: Run "dart run build_runner build" if build_runner is a dependency or dev_dependency.
+  entry: dart_pre_commit --step=build-runner
+  language: dart
+  files: \.dart$
+  require_serial: true
+
+- id: format
+  name: Dart Format
+  description: Run "dart format" on each existing folder and re-add changed files.
+  entry: dart_pre_commit --step=format
+  language: dart
+  files: \.dart$
+  require_serial: true
+
+- id: analyze
+  name: Dart Analyze
+  description: Run "dart analyze" when Dart files change.
+  entry: dart_pre_commit --step=analyze
+  language: dart
+  files: \.dart$
+  require_serial: true
+
+- id: test
+  name: Dart / Flutter Test
+  description: Run "flutter test" or "dart test" if a test folder exists.
+  entry: dart_pre_commit --step=test
+  language: dart
+  files: \.dart$
+  require_serial: true
+
+- id: changelog-version
+  name: Verify Changelog Version
+  description: Verify that the version in pubspec.yaml has an entry in CHANGELOG.md.
+  entry: dart_pre_commit --step=changelog-version
+  language: dart
+  files: \.dart$
+  require_serial: true
+
+- id: branch-version
+  name: Verify Branch Version
+  description: Verify that the version in pubspec.yaml does not match the repo's default branch.
+  entry: dart_pre_commit --step=branch-version
+  language: dart
+  files: \.dart$
+  require_serial: true

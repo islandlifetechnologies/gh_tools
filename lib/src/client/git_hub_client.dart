@@ -108,8 +108,8 @@ class GitHubClient({required final GitHub _gh}) {
     final response = await _gh.request(
       'PATCH',
       path,
-      headers: {'Content-Type': 'application/json'},
       body: body,
+      headers: {'Content-Type': 'application/json'},
     );
 
     if (response.statusCode == 200 || response.statusCode == 204) {

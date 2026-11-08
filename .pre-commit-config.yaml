@@ -1,0 +1,18 @@
+repos:
+  - repo: https://github.com/islandlifetechnologies/gh_tools
+    rev: v1
+    hooks:
+      - id: pub-get
+        name: pub-get
+      - id: build-runner
+        name: build-runner
+      - id: format
+        name: format
+      - id: analyze
+        name: analyze
+      - id: test
+        name: test
+      - id: changelog-version
+        name: changelog-version
+      - id: branch-version
+        name: branch-version

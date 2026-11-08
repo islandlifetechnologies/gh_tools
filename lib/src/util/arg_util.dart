@@ -8,7 +8,7 @@ import 'package:gh_tools/src/util/pubspec.dart';
 import 'package:github/github.dart';
 
 /// Wraps [ArgParser] with common options (--help, --version).
-class ArgUtil({required final ArgParser parser}) {
+class const ArgUtil({required final ArgParser parser}) {
   /// Parses [args] and handles --help / --version automatically.
   ArgUtilResults parse(
     List<String> args, {
@@ -72,7 +72,7 @@ class ArgUtil({required final ArgParser parser}) {
   }
 }
 
-class ArgUtilResults({
+class const ArgUtilResults({
   required final ArgResults parsed,
   required final RepositorySlug? repository,
   required final String? token,
