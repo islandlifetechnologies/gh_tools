@@ -1,7 +1,7 @@
 name: "gh_tools"
 description: "Tools related to common GitHub activities."
 homepage: https://github.com/islandlifetechnologies/gh_tools
-version: 1.1.0
+version: 1.1.1
 
 environment:
   sdk: ^3.13.0
