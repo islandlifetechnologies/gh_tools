@@ -9,6 +9,7 @@
 .history
 .svn/
 pubspec.lock
+*.g.dart
 output
 
 # IntelliJ related

@@ -238,7 +238,7 @@ Future<void> _installHooks({
   required String displayPath,
   required FileSystem fs,
 }) async {
-  stdout.writeln('Installing pre-commit hooks...');
+  stdout.writeln('Installing prek hooks...');
 
   final configFile = fs.file('$absTargetPath/.pre-commit-config.yaml');
   if (!configFile.existsSync()) {
@@ -298,7 +298,7 @@ Future<void> _installHooks({
     );
   }
 
-  await _runCommand('pre-commit', ['install'], workingDirectory: absTargetPath);
+  await _runCommand('prek', ['install', '-f'], workingDirectory: absTargetPath);
 }
 
 String? _extractPackageFromHook(Map<dynamic, dynamic> hook) {
@@ -932,7 +932,7 @@ void _stepScanPackages({
     if (failOnModify) {
       throw _StepFailedException(
         message:
-            'Alert: $configFileName was modified to sync with the packages folder. Please stage the updated $configFileName and re-run pre-commit.',
+            'Alert: $configFileName was modified to sync with the packages folder. Please stage the updated $configFileName and re-run prek.',
       );
     }
   } else if (parsedYaml is List) {
@@ -987,7 +987,7 @@ void _stepScanPackages({
     if (failOnModify) {
       throw _StepFailedException(
         message:
-            'Alert: $configFileName was modified to sync with the packages folder. Please stage the updated $configFileName and re-run pre-commit.',
+            'Alert: $configFileName was modified to sync with the packages folder. Please stage the updated $configFileName and re-run prek.',
       );
     }
   } else {

@@ -46,7 +46,7 @@ That will automatically get the latest binaries for either Linux, MacOS, or Wind
 
 Runs Dart and Flutter pre-commit validation steps when `.dart` files change within a target project path.
 
-For quick usage, run `dart pub global run gh_tools:dart_pre_commit --step install` to create the pre-commit hook and install it.
+For quick usage, run `dart pub global run gh_tools:dart_pre_commit --step install` to create `.pre-commit-config.yaml` and install the `prek` hook.
 <!-- markup:process
 
 command: dart_pre_commit
@@ -102,7 +102,7 @@ For monorepos with a `packages/` folder, include the `scan_packages` hook step. 
 
 1. Scans all directories inside `packages/`.
 2. Scans `.pre-commit-config.yaml` and ensures that each package has an `all` hook step (`--path=packages/<package>`) in alphabetical order.
-3. Automatically adds missing packages, removes deleted packages, and sorts package entries alphabetically. If `.pre-commit-config.yaml` is modified, `scan_packages` fails the step and alerts you to stage the updated file and re-run `pre-commit`.
+3. Automatically adds missing packages, removes deleted packages, and sorts package entries alphabetically. If `.pre-commit-config.yaml` is modified, `scan_packages` fails the step and alerts you to stage the updated file and re-run `prek`.
 4. Passes automatically if no `packages/` folder exists.
 
 ```yaml

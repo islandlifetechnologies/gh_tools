@@ -1,3 +1,7 @@
+## 1.1.3
+
+- Switched from `pre-commit` to `prek`
+
 ## 1.1.2
 
 - Switched to using `ilt_lints` v2.0.0.
