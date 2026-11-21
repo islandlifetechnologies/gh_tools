@@ -22,6 +22,8 @@ const _kSteps = {
   'format-fail':
       'Run "dart format --set-exit-if-changed" on each existing folder.',
   'install': 'Creates / updates the .pre-commit-config.yaml file as necessary.',
+  'integration-test': 'Run "flutter test integration_test" or "dart test integration_test" if an "integration_test" folder exists.',
+  'monorepo': 'Ensure .pre-commit-config.yaml and detect_changes workflows include all packages.',
   'pub-get': 'Run "dart pub get".',
   'scan-packages': 'Scan the packages folder and sync package entries in .pre-commit-config.yaml.',
   'test': 'Run "flutter test" or "dart test" if a "test" folder exists.',
@@ -86,6 +88,14 @@ Future<void> main(List<String> args) async {
       : relPrefix.replaceAll(RegExp(r'/+$'), '');
 
   try {
+    if (step == 'monorepo') {
+      _stepMonorepo(
+        absTargetPath: absTargetPath,
+        displayPath: displayPath,
+        fs: fs,
+      );
+      exit(0);
+    }
     if (step == 'scan-packages') {
       _stepScanPackages(
         absTargetPath: absTargetPath,
@@ -157,6 +167,12 @@ Future<void> main(List<String> args) async {
           fs: fs,
           pubspecYaml: pubspecYaml,
         );
+        await _stepIntegrationTest(
+          absTargetPath: absTargetPath,
+          displayPath: displayPath,
+          fs: fs,
+          pubspecYaml: pubspecYaml,
+        );
         _stepChangelogVersion(
           absTargetPath: absTargetPath,
           displayPath: displayPath,
@@ -207,6 +223,13 @@ Future<void> main(List<String> args) async {
           fs: fs,
           setExitIfChanged: true,
         );
+      case 'integration-test':
+        await _stepIntegrationTest(
+          absTargetPath: absTargetPath,
+          displayPath: displayPath,
+          fs: fs,
+          pubspecYaml: pubspecYaml,
+        );
       case 'pub-get':
         await _stepPubGet(
           absTargetPath: absTargetPath,
@@ -214,6 +237,12 @@ Future<void> main(List<String> args) async {
         );
       case 'test':
         await _stepTest(
+          absTargetPath: absTargetPath,
+          displayPath: displayPath,
+          fs: fs,
+          pubspecYaml: pubspecYaml,
+        );
+        await _stepIntegrationTest(
           absTargetPath: absTargetPath,
           displayPath: displayPath,
           fs: fs,
@@ -247,15 +276,13 @@ Future<void> _installHooks({
 
   final packagesDir = fs.directory('$absTargetPath/packages');
   if (packagesDir.existsSync()) {
-    const defaultSteps = ['scan-packages'];
-
     final config = <String, dynamic>{
       'repos': [
         {
           'repo': 'https://github.com/islandlifetechnologies/gh_tools',
           'rev': 'v${kPubspec.version}',
           'hooks': [
-            for (final step in defaultSteps) {'id': step, 'name': step},
+            {'id': 'monorepo', 'name': 'monorepo', 'priority': 1},
           ],
         },
       ],
@@ -264,22 +291,26 @@ Future<void> _installHooks({
     configFile.writeAsStringSync(
       YamlWriter(allowUnquotedStrings: true).convert(config),
     );
-    _stepScanPackages(
-      absTargetPath: absTargetPath,
-      displayPath: displayPath,
-      failOnModify: false,
-      fs: fs,
-    );
+    final result = runMonorepoCheck(absTargetPath: absTargetPath, fs: fs);
+    if (result.skipped) {
+      _stepScanPackages(
+        absTargetPath: absTargetPath,
+        displayPath: displayPath,
+        failOnModify: false,
+        fs: fs,
+      );
+    }
   } else {
-    const defaultSteps = {
-      'pub-get': 'Dart Pub Get',
-      'build-runner': 'Run build_runner',
-      'format': 'Format code',
-      'analyze': 'Run "dart analyze"',
-      'test': 'Dart / Flutter test',
-      'changelog-version': 'Verify Changelog Version',
-      'branch-version': 'Verify Branch Version',
-    };
+    const defaultSteps = [
+      (id: 'pub-get', priority: 1),
+      (id: 'build-runner', priority: 1),
+      (id: 'format', priority: 2),
+      (id: 'analyze', priority: 2),
+      (id: 'test', priority: 2),
+      (id: 'integration-test', priority: 2),
+      (id: 'changelog-version', priority: 2),
+      (id: 'branch-version', priority: 2),
+    ];
 
     final config = <String, dynamic>{
       'repos': [
@@ -287,7 +318,8 @@ Future<void> _installHooks({
           'repo': 'https://github.com/islandlifetechnologies/gh_tools',
           'rev': 'v${kPubspec.version}',
           'hooks': [
-            for (final step in defaultSteps.entries) {'id': step.key},
+            for (final step in defaultSteps)
+              {'id': step.id, 'priority': step.priority},
           ],
         },
       ],
@@ -801,6 +833,30 @@ Future<void> _stepPubGet({
   await _runCommand('dart', ['pub', 'get'], workingDirectory: absTargetPath);
 }
 
+void _stepMonorepo({
+  required String absTargetPath,
+  required String displayPath,
+  required FileSystem fs,
+}) {
+  final result = runMonorepoCheck(absTargetPath: absTargetPath, fs: fs);
+  if (result.skipped) {
+    stdout.writeln(
+      '==> [$displayPath] Not a multi-package monorepo. Skipping monorepo check.',
+    );
+    return;
+  }
+
+  if (result.modifiedFiles.isNotEmpty) {
+    final files = result.modifiedFiles.join(', ');
+    throw _StepFailedException(
+      message:
+          'Alert: Updated $files to sync with the packages folder. Please stage the updated file(s) and re-run prek.',
+    );
+  }
+
+  stdout.writeln('==> [$displayPath] Monorepo configuration is in sync.');
+}
+
 /// Scans the `packages` folder (if present) and ensures `.pre-commit-config.yaml`
 /// has a matching `all` step for every package in alphabetical order.
 void _stepScanPackages({
@@ -919,6 +975,7 @@ void _stepScanPackages({
           'id': 'all',
           'name': pkg,
           'args': ['--path=packages/$pkg'],
+          'priority': 2,
         },
     ];
 
@@ -977,6 +1034,7 @@ void _stepScanPackages({
           'language': 'dart',
           'files': r'\.dart$',
           'require_serial': true,
+          'priority': 2,
         },
     ];
 
@@ -997,6 +1055,48 @@ void _stepScanPackages({
   }
 }
 
+/// Runs `flutter test` or `dart test` (with optional [extraArgs]) if
+/// [folderName] exists in [absTargetPath].
+Future<void> _runTestFolder({
+  required String absTargetPath,
+  required String displayPath,
+  List<String> extraArgs = const [],
+  required String folderName,
+  required FileSystem fs,
+  required Map<dynamic, dynamic> pubspecYaml,
+}) async {
+  final dir = fs.directory('$absTargetPath/$folderName');
+  if (!dir.existsSync()) {
+    stdout.writeln(
+      '==> [$displayPath] No $folderName directory found. Skipping.',
+    );
+    return;
+  }
+
+  final isFlutter = _hasDependency(pubspecYaml, 'flutter');
+  final executable = isFlutter ? 'flutter' : 'dart';
+  final args = ['test', ...extraArgs];
+  stdout.writeln('==> [$displayPath] Running $executable ${args.join(' ')}...');
+  await _runCommand(executable, args, workingDirectory: absTargetPath);
+}
+
+/// If an "integration_test" folder exists, and "flutter" is a dependency, run
+/// "flutter test integration_test". If "flutter" is not a dependency, run
+/// "dart test integration_test".
+Future<void> _stepIntegrationTest({
+  required String absTargetPath,
+  required String displayPath,
+  required FileSystem fs,
+  required Map<dynamic, dynamic> pubspecYaml,
+}) => _runTestFolder(
+  absTargetPath: absTargetPath,
+  displayPath: displayPath,
+  extraArgs: const ['integration_test'],
+  folderName: 'integration_test',
+  fs: fs,
+  pubspecYaml: pubspecYaml,
+);
+
 /// If a "test" folder exists, and "flutter" is a dependency, run
 /// "flutter test". If a "test" folder exists and "flutter" is not a
 /// dependency, run "dart test".
@@ -1005,23 +1105,13 @@ Future<void> _stepTest({
   required String displayPath,
   required FileSystem fs,
   required Map<dynamic, dynamic> pubspecYaml,
-}) async {
-  final testDir = fs.directory('$absTargetPath/test');
-  if (!testDir.existsSync()) {
-    stdout.writeln(
-      '==> [$displayPath] No test directory found. Skipping tests.',
-    );
-    return;
-  }
-
-  if (_hasDependency(pubspecYaml, 'flutter')) {
-    stdout.writeln('==> [$displayPath] Running flutter test...');
-    await _runCommand('flutter', ['test'], workingDirectory: absTargetPath);
-  } else {
-    stdout.writeln('==> [$displayPath] Running dart test...');
-    await _runCommand('dart', ['test'], workingDirectory: absTargetPath);
-  }
-}
+}) => _runTestFolder(
+  absTargetPath: absTargetPath,
+  displayPath: displayPath,
+  folderName: 'test',
+  fs: fs,
+  pubspecYaml: pubspecYaml,
+);
 
 class const _StepFailedException({
   final int exitCode = 1,

@@ -71,6 +71,8 @@ dart_pre_commit 1.1.3
           [format]               Run "dart format" on each existing folder and re-add changed files.
           [format-fail]          Run "dart format --set-exit-if-changed" on each existing folder.
           [install]              Creates / updates the .pre-commit-config.yaml file as necessary.
+          [integration-test]     Run "flutter test integration_test" or "dart test integration_test" if an "integration_test" folder exists.
+          [monorepo]             Ensure .pre-commit-config.yaml and detect_changes workflows include all packages.
           [pub-get]              Run "dart pub get".
           [scan-packages]        Scan the packages folder and sync package entries in .pre-commit-config.yaml.
           [test]                 Run "flutter test" or "dart test" if a "test" folder exists.
@@ -88,12 +90,21 @@ repos:
     rev: v1
     hooks:
       - id: pub-get
+        priority: 1
       - id: build-runner
+        priority: 1
       - id: format
+        priority: 2
       - id: analyze
+        priority: 2
       - id: test
+        priority: 2
+      - id: integration-test
+        priority: 2
       - id: changelog-version
+        priority: 2
       - id: branch-version
+        priority: 2
 ```
 
 #### Pre-Commit Example (Monorepo / Custom Path)
@@ -114,9 +125,11 @@ repos:
       - id: all
         name: package_one
         args: [--path=packages/package_one]
+        priority: 2
       - id: all
         name: package_two
         args: [--path=packages/package_two]
+        priority: 2
 ```
 
 ---

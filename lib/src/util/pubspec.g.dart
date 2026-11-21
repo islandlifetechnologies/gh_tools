@@ -10,7 +10,7 @@ const _$kPubspec = (
   name: "gh_tools",
   description: "Tools related to common GitHub activities.",
   homepage: "https://github.com/islandlifetechnologies/gh_tools",
-  version: "1.1.3",
+  version: "1.1.4",
   environment: (sdk: "^3.13.0"),
   executables: (
     dartPreCommit: "dart_pre_commit",

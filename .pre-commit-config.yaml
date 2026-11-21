@@ -31,6 +31,12 @@ repos:
         language: system
         files: \.dart$
         require_serial: true
+      - id: integration-test
+        name: Dart / Flutter integration test
+        entry: dart run bin/dart_pre_commit.dart --step=integration-test
+        language: system
+        files: \.dart$
+        require_serial: true
       - id: changelog-version
         name: Verify Changelog Version
         entry: dart run bin/dart_pre_commit.dart --step=changelog-version

@@ -1,3 +1,7 @@
+## 1.1.4
+
+- Updated to set priority so prek can run things in parallel
+
 ## 1.1.3
 
 - Switched from `pre-commit` to `prek`
