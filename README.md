@@ -57,7 +57,7 @@ output:
 /-->
 <!-- markup:output -->
 ```bash
-dart_pre_commit 1.1.4
+dart_pre_commit 1.1.5
 
 -p, --path                       The path to the project to run the steps against.
                                  (defaults to ".")
@@ -148,7 +148,7 @@ output:
 /-->
 <!-- markup:output -->
 ```bash
-detect_changes 1.1.4
+detect_changes 1.1.5
 
     --filters (mandatory)    Filter definitions (YAML/JSON).
     --mode                   Default filter mode. And requires all filters to match, or will match on any filter.
@@ -298,7 +298,7 @@ output:
 /-->
 <!-- markup:output -->
 ```bash
-pubspec_tag 1.1.4
+pubspec_tag 1.1.5
 
     --branch        Branch name to scan the project for.  Default to the repository's default branch.
     --changelog     Scan for the version to exist in the changelog and fail if not.
@@ -349,7 +349,7 @@ output:
 /-->
 <!-- markup:output -->
 ```bash
-scan_pubspec 1.1.4
+scan_pubspec 1.1.5
 
 -f, --format                    Output format.
 
@@ -410,7 +410,7 @@ output:
 /-->
 <!-- markup:output -->
 ```bash
-update_repo_properties 1.1.4
+update_repo_properties 1.1.5
 
 -p, --properties    Properties file path (YAML/JSON).
                     (defaults to ".github/properties.yaml")
