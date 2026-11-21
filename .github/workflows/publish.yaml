@@ -85,6 +85,12 @@ jobs:
           cp -f bin/pubspec_tag outbin/linux/pubspec_tag
           cp -f bin/scan_pubspec outbin/linux/scan_pubspec
           cp -f bin/update_repo_properties outbin/linux/update_repo_properties
+
+          rm bin/dart_pre_commit
+          rm bin/detect_changes
+          rm bin/pubspec_tag
+          rm bin/scan_pubspec
+          rm bin/update_repo_properties
           chmod +x outbin/linux/*
           cd outbin
           git add .

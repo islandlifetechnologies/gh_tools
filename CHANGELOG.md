@@ -1,3 +1,7 @@
+## 1.1.7
+
+- Found more binaries that needed excluded and excluded them.
+
 ## 1.1.6
 
 - Added `outbin` to ignore to greatly reduce package size.
