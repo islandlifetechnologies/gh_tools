@@ -11,6 +11,7 @@
 pubspec.lock
 *.g.dart
 output
+outbin/
 
 # IntelliJ related
 *.iml

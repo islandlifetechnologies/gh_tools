@@ -1,3 +1,7 @@
+## 1.1.6
+
+- Added `outbin` to ignore to greatly reduce package size.
+
 ## 1.1.5
 
 - Added monorepo step.
