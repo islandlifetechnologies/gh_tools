@@ -25,7 +25,6 @@ const _kSteps = {
   'integration-test': 'Run "flutter test integration_test" or "dart test integration_test" if an "integration_test" folder exists.',
   'monorepo': 'Ensure .pre-commit-config.yaml and detect_changes workflows include all packages.',
   'pub-get': 'Run "dart pub get".',
-  'scan-packages': 'Scan the packages folder and sync package entries in .pre-commit-config.yaml.',
   'test': 'Run "flutter test" or "dart test" if a "test" folder exists.',
 };
 
@@ -90,14 +89,6 @@ Future<void> main(List<String> args) async {
   try {
     if (step == 'monorepo') {
       _stepMonorepo(
-        absTargetPath: absTargetPath,
-        displayPath: displayPath,
-        fs: fs,
-      );
-      exit(0);
-    }
-    if (step == 'scan-packages') {
-      _stepScanPackages(
         absTargetPath: absTargetPath,
         displayPath: displayPath,
         fs: fs,
@@ -291,15 +282,7 @@ Future<void> _installHooks({
     configFile.writeAsStringSync(
       YamlWriter(allowUnquotedStrings: true).convert(config),
     );
-    final result = runMonorepoCheck(absTargetPath: absTargetPath, fs: fs);
-    if (result.skipped) {
-      _stepScanPackages(
-        absTargetPath: absTargetPath,
-        displayPath: displayPath,
-        failOnModify: false,
-        fs: fs,
-      );
-    }
+    runMonorepoCheck(absTargetPath: absTargetPath, fs: fs);
   } else {
     const defaultSteps = [
       (id: 'pub-get', priority: 1),
@@ -331,129 +314,6 @@ Future<void> _installHooks({
   }
 
   await _runCommand('prek', ['install', '-f'], workingDirectory: absTargetPath);
-}
-
-String? _extractPackageFromHook(Map<dynamic, dynamic> hook) {
-  final id = hook['id']?.toString() ?? '';
-  final entry = hook['entry']?.toString() ?? '';
-  final args = hook['args'];
-
-  final tokens = <String>[];
-  if (entry.isNotEmpty) {
-    tokens.addAll(entry.split(RegExp(r'\s+')));
-  }
-  if (args is List) {
-    tokens.addAll(args.map((e) => e.toString()));
-  }
-
-  final isAllStep =
-      id == 'all' ||
-      tokens.contains('--step=all') ||
-      _hasFlagValue(tokens, '--step', 'all') ||
-      _hasFlagValue(tokens, '-s', 'all');
-  if (!isAllStep) {
-    return null;
-  }
-
-  for (var i = 0; i < tokens.length; i++) {
-    final token = tokens[i];
-    if (token.startsWith('--path=')) {
-      final path = token.substring('--path='.length);
-      final pkg = _packageNameFromPath(path);
-      if (pkg != null) {
-        return pkg;
-      }
-    } else if ((token == '--path' || token == '-p') && i + 1 < tokens.length) {
-      final pkg = _packageNameFromPath(tokens[i + 1]);
-      if (pkg != null) {
-        return pkg;
-      }
-    } else if (!token.startsWith('-')) {
-      final pkg = _packageNameFromPath(token);
-      if (pkg != null) {
-        return pkg;
-      }
-    }
-  }
-  return null;
-}
-
-String _formatYamlScalar(dynamic value) {
-  if (value == null) {
-    return 'null';
-  }
-  if (value is bool || value is num) {
-    return value.toString();
-  }
-  final str = value.toString();
-  if (str.isEmpty ||
-      str.contains('\n') ||
-      RegExp(r'^[\s:#\-\[\]\{\},&*!|>\x27"@`?]').hasMatch(str) ||
-      str.contains(': ')) {
-    final escaped = str.replaceAll(r'\', r'\\').replaceAll('"', r'\"');
-    return '"$escaped"';
-  }
-  return str;
-}
-
-void _writeYamlMap(
-  StringBuffer buf,
-  Map<dynamic, dynamic> map, {
-  bool firstLineUnindented = false,
-  required int indent,
-}) {
-  final entries = map.entries.toList();
-  for (var i = 0; i < entries.length; i++) {
-    final entry = entries[i];
-    final key = entry.key.toString();
-    final value = entry.value;
-    final prefix = (i == 0 && firstLineUnindented) ? '' : (' ' * indent);
-
-    if (value is Map) {
-      buf.writeln('$prefix$key:');
-      _writeYamlMap(buf, Map<dynamic, dynamic>.from(value), indent: indent + 2);
-    } else if (value is List) {
-      if (key == 'args' &&
-          value.isNotEmpty &&
-          value.every((e) => e is! Map && e is! List)) {
-        final inlineItems = value.map(_formatYamlScalar).join(', ');
-        buf.writeln('$prefix$key: [$inlineItems]');
-      } else if (value.isEmpty) {
-        buf.writeln('$prefix$key: []');
-      } else {
-        buf.writeln('$prefix$key:');
-        _writeYamlList(buf, value, indent: indent + 2);
-      }
-    } else {
-      buf.writeln('$prefix$key: ${_formatYamlScalar(value)}');
-    }
-  }
-}
-
-void _writeYamlList(
-  StringBuffer buf,
-  List<dynamic> list, {
-  bool blankLineBetweenItems = false,
-  required int indent,
-}) {
-  final prefix = ' ' * indent;
-  for (var i = 0; i < list.length; i++) {
-    if (i > 0 && blankLineBetweenItems) {
-      buf.writeln();
-    }
-    final item = list[i];
-    if (item is Map) {
-      buf.write('$prefix- ');
-      _writeYamlMap(
-        buf,
-        Map<dynamic, dynamic>.from(item),
-        firstLineUnindented: true,
-        indent: indent + 2,
-      );
-    } else {
-      buf.writeln('$prefix- ${_formatYamlScalar(item)}');
-    }
-  }
 }
 
 Future<String?> _getDefaultBranch(String workingDirectory) async {
@@ -583,41 +443,6 @@ bool _hasDependency(
     }
   }
   return false;
-}
-
-bool _hasFlagValue(List<String> tokens, String flag, String expectedValue) {
-  for (var i = 0; i < tokens.length - 1; i++) {
-    if (tokens[i] == flag && tokens[i + 1] == expectedValue) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool _listsEqual(List<String> a, List<String> b) {
-  if (a.length != b.length) {
-    return false;
-  }
-  for (var i = 0; i < a.length; i++) {
-    if (a[i] != b[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-String? _packageNameFromPath(String rawPath) {
-  final normalized = rawPath
-      .replaceAll(r'\', '/')
-      .replaceFirst(RegExp(r'^\./'), '')
-      .replaceAll(RegExp(r'/+$'), '');
-  if (normalized.startsWith('packages/')) {
-    final rest = normalized.substring('packages/'.length);
-    if (rest.isNotEmpty && !rest.contains('/')) {
-      return rest;
-    }
-  }
-  return null;
 }
 
 Future<void> _runCommand(
@@ -855,204 +680,6 @@ void _stepMonorepo({
   }
 
   stdout.writeln('==> [$displayPath] Monorepo configuration is in sync.');
-}
-
-/// Scans the `packages` folder (if present) and ensures `.pre-commit-config.yaml`
-/// has a matching `all` step for every package in alphabetical order.
-void _stepScanPackages({
-  required String absTargetPath,
-  required String displayPath,
-  bool failOnModify = true,
-  required FileSystem fs,
-}) {
-  final packagesDir = fs.directory('$absTargetPath/packages');
-  if (!packagesDir.existsSync()) {
-    stdout.writeln(
-      '==> [$displayPath] No packages directory found. Passing scan-packages.',
-    );
-    return;
-  }
-
-  final fsPackages =
-      packagesDir
-          .listSync()
-          .whereType<Directory>()
-          .map((d) => fs.path.basename(d.path))
-          .where((name) => !name.startsWith('.'))
-          .toList()
-        ..sort();
-
-  var configFile = fs.file('$absTargetPath/.pre-commit-config.yaml');
-  var configFileName = '.pre-commit-config.yaml';
-  if (!configFile.existsSync()) {
-    final fallbackFile = fs.file('$absTargetPath/.pre-commit-hooks.yaml');
-    if (fallbackFile.existsSync()) {
-      configFile = fallbackFile;
-      configFileName = '.pre-commit-hooks.yaml';
-    } else {
-      throw _StepFailedException(
-        message: "Error: .pre-commit-config.yaml not found in '$displayPath'.",
-      );
-    }
-  }
-
-  final rawContent = configFile.readAsStringSync();
-  final parsedYaml = yaon.parse(rawContent);
-
-  if (parsedYaml is Map) {
-    final rootMap = Map<String, dynamic>.from(parsedYaml);
-    final reposRaw = rootMap['repos'];
-    if (reposRaw is! List || reposRaw.isEmpty) {
-      throw _StepFailedException(
-        message:
-            "Error: '$configFileName' does not contain a valid 'repos' list.",
-      );
-    }
-
-    final repos = reposRaw
-        .whereType<Map>()
-        .map((m) => Map<String, dynamic>.from(m))
-        .toList();
-
-    var targetRepoIndex = repos.indexWhere((repoMap) {
-      final repoUrl = repoMap['repo']?.toString() ?? '';
-      if (repoUrl.contains('gh_tools')) {
-        return true;
-      }
-      final hooks = repoMap['hooks'];
-      if (hooks is List) {
-        return hooks.whereType<Map>().any(
-          (h) =>
-              h['id'] == 'scan-packages' ||
-              h['id'] == 'scan_packages' ||
-              _extractPackageFromHook(h) != null,
-        );
-      }
-      return false;
-    });
-    if (targetRepoIndex == -1) {
-      targetRepoIndex = 0;
-    }
-
-    final targetRepo = repos[targetRepoIndex];
-    final hooksRaw = targetRepo['hooks'];
-    final hooks = hooksRaw is List
-        ? hooksRaw
-              .whereType<Map>()
-              .map((m) => Map<String, dynamic>.from(m))
-              .toList()
-        : <Map<String, dynamic>>[];
-
-    final nonPackageHooks = <Map<String, dynamic>>[];
-    final existingPackages = <String>[];
-    var sawPackageHook = false;
-    var orderCanonical = true;
-
-    for (final hook in hooks) {
-      final pkg = _extractPackageFromHook(hook);
-      if (pkg != null) {
-        sawPackageHook = true;
-        existingPackages.add(pkg);
-      } else {
-        if (sawPackageHook) {
-          orderCanonical = false;
-        }
-        nonPackageHooks.add(hook);
-      }
-    }
-
-    if (orderCanonical && _listsEqual(existingPackages, fsPackages)) {
-      stdout.writeln(
-        '==> [$displayPath] All packages in $configFileName are in sync and in alphabetical order.',
-      );
-      return;
-    }
-
-    final updatedHooks = <Map<String, dynamic>>[
-      ...nonPackageHooks,
-      for (final pkg in fsPackages)
-        {
-          'id': 'all',
-          'name': pkg,
-          'args': ['--path=packages/$pkg'],
-          'priority': 2,
-        },
-    ];
-
-    targetRepo['hooks'] = updatedHooks;
-    rootMap['repos'] = repos;
-
-    final buf = StringBuffer();
-    _writeYamlMap(buf, rootMap, indent: 0);
-    configFile.writeAsStringSync(buf.toString());
-
-    if (failOnModify) {
-      throw _StepFailedException(
-        message:
-            'Alert: $configFileName was modified to sync with the packages folder. Please stage the updated $configFileName and re-run prek.',
-      );
-    }
-  } else if (parsedYaml is List) {
-    final hooks = parsedYaml
-        .whereType<Map>()
-        .map((m) => Map<String, dynamic>.from(m))
-        .toList();
-
-    final nonPackageHooks = <Map<String, dynamic>>[];
-    final existingPackages = <String>[];
-    var sawPackageHook = false;
-    var orderCanonical = true;
-
-    for (final hook in hooks) {
-      final pkg = _extractPackageFromHook(hook);
-      if (pkg != null) {
-        sawPackageHook = true;
-        existingPackages.add(pkg);
-      } else {
-        if (sawPackageHook) {
-          orderCanonical = false;
-        }
-        nonPackageHooks.add(hook);
-      }
-    }
-
-    if (orderCanonical && _listsEqual(existingPackages, fsPackages)) {
-      stdout.writeln(
-        '==> [$displayPath] All packages in $configFileName are in sync and in alphabetical order.',
-      );
-      return;
-    }
-
-    final updatedHooks = <Map<String, dynamic>>[
-      ...nonPackageHooks,
-      for (final pkg in fsPackages)
-        {
-          'id': pkg,
-          'name': 'Dart Pre-Commit ($pkg)',
-          'description': 'Run all pre-commit steps for packages/$pkg.',
-          'entry': 'dart_pre_commit --step=all --path=packages/$pkg',
-          'language': 'dart',
-          'files': r'\.dart$',
-          'require_serial': true,
-          'priority': 2,
-        },
-    ];
-
-    final buf = StringBuffer();
-    _writeYamlList(buf, updatedHooks, blankLineBetweenItems: true, indent: 0);
-    configFile.writeAsStringSync(buf.toString());
-
-    if (failOnModify) {
-      throw _StepFailedException(
-        message:
-            'Alert: $configFileName was modified to sync with the packages folder. Please stage the updated $configFileName and re-run prek.',
-      );
-    }
-  } else {
-    throw _StepFailedException(
-      message: "Error: Unable to parse '$configFileName'.",
-    );
-  }
 }
 
 /// Runs `flutter test` or `dart test` (with optional [extraArgs]) if

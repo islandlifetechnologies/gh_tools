@@ -348,8 +348,12 @@ String? _syncPreCommitConfig({
       if (hook['priority'] != 2) {
         allPackagePrioritiesOk = false;
       }
-    } else if (hook['id'] == 'monorepo') {
-      if (sawPackageHook || nonPackageHooks.isNotEmpty) {
+    } else if (hook['id'] == 'monorepo' ||
+        hook['id'] == 'scan-packages' ||
+        hook['id'] == 'scan_packages') {
+      if (sawPackageHook ||
+          nonPackageHooks.isNotEmpty ||
+          hook['id'] != 'monorepo') {
         orderCanonical = false;
       }
       existingMonorepoHook = hook;

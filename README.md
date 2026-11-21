@@ -74,7 +74,6 @@ dart_pre_commit 1.1.4
           [integration-test]     Run "flutter test integration_test" or "dart test integration_test" if an "integration_test" folder exists.
           [monorepo]             Ensure .pre-commit-config.yaml and detect_changes workflows include all packages.
           [pub-get]              Run "dart pub get".
-          [scan-packages]        Scan the packages folder and sync package entries in .pre-commit-config.yaml.
           [test]                 Run "flutter test" or "dart test" if a "test" folder exists.
 
 -h, --help                       Show usage.
@@ -109,19 +108,21 @@ repos:
 
 #### Pre-Commit Example (Monorepo / Custom Path)
 
-For monorepos with a `packages/` folder, include the `scan_packages` hook step. When `scan_packages` runs, it:
+For monorepos with a `packages/` folder, include the `monorepo` hook step (replaces the deprecated `scan-packages` hook). When `monorepo` runs, it:
 
 1. Scans all directories inside `packages/`.
-2. Scans `.pre-commit-config.yaml` and ensures that each package has an `all` hook step (`--path=packages/<package>`) in alphabetical order.
-3. Automatically adds missing packages, removes deleted packages, and sorts package entries alphabetically. If `.pre-commit-config.yaml` is modified, `scan_packages` fails the step and alerts you to stage the updated file and re-run `prek`.
-4. Passes automatically if no `packages/` folder exists.
+2. Scans `.pre-commit-config.yaml` and ensures that each package has an `all` hook step (`--path=packages/<package>`) in alphabetical order with `priority: 2`.
+3. Scans `.github/workflows/*.y(a)ml` for `detect_changes` workflows and ensures all packages exist in their `filters`.
+4. Automatically adds missing packages, removes deleted packages, and sorts package entries alphabetically. If any file is modified, `monorepo` fails the step and alerts you to stage the updated file(s) and re-run `prek`.
+5. Passes automatically if no `packages/` folder exists or it contains one or fewer packages.
 
 ```yaml
 repos:
   - repo: https://github.com/islandlifetechnologies/gh_tools
     rev: v1
     hooks:
-      - id: scan_packages
+      - id: monorepo
+        priority: 1
       - id: all
         name: package_one
         args: [--path=packages/package_one]

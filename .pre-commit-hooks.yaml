@@ -16,9 +16,11 @@
   require_serial: true
 
 - id: scan-packages
-  name: Scan Monorepo Packages
-  description: Ensure all folders in packages/ have a corresponding step in .pre-commit-config.yaml.
-  entry: dart_pre_commit --step=scan-packages
+  name: Scan Monorepo Packages (Deprecated)
+  description: >-
+    Deprecated: Use the `monorepo` step instead. Both run `dart_pre_commit --step=monorepo`
+    to ensure .pre-commit-config.yaml and detect_changes workflows include all packages.
+  entry: dart_pre_commit --step=monorepo
   language: dart
   always_run: true
   pass_filenames: false

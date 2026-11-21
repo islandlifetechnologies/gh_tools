@@ -1,3 +1,8 @@
+## 1.1.5
+
+- Added monorepo step.
+- Deprecated scan-packages step.
+
 ## 1.1.4
 
 - Updated to set priority so prek can run things in parallel
